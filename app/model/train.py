@@ -66,10 +66,21 @@ def preprocess_data(X, y):
     # Imputar los valores NaN con la mediana de cada columna
     for feature in features_with_zeros:
         median_value = X[feature].median()
-        X[feature].fillna(median_value, inplace=True)
+        # Corregir la advertencia de fillna inplace
+        X[feature] = X[feature].fillna(median_value)
 
     # Dividir en conjuntos de entrenamiento y prueba
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+    # Modificación para manejar conjuntos de datos pequeños
+    if len(X) < 10:
+        # Para conjuntos pequeños, usar una división simple sin estratificación
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.4, random_state=42, stratify=None
+        )
+    else:
+        # Para conjuntos más grandes, usar la estratificación normal
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42, stratify=y
+        )
 
     print(f"Tamaño del conjunto de entrenamiento: {X_train.shape}")
     print(f"Tamaño del conjunto de prueba: {X_test.shape}")
@@ -128,9 +139,9 @@ def evaluate_model(model, X_test, y_test):
 
     # Calcular métricas
     accuracy = accuracy_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred)
-    recall = recall_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, zero_division=0)
+    recall = recall_score(y_test, y_pred, zero_division=0)
+    f1 = f1_score(y_test, y_pred, zero_division=0)
     conf_matrix = confusion_matrix(y_test, y_pred)
 
     # Mostrar resultados
